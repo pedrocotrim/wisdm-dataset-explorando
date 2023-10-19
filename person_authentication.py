@@ -11,6 +11,7 @@ def compute_eer_changjiang(labels, prediction):
     """
     Computes the Equal Error Rate based on the ROC curve, using interpolation to
     find the point closest to the intersection between the curve and the line in which FPR==TPR.
+    Credits: https://yangcha.github.io/EER-ROC/
     """
     from scipy.optimize import brentq
     from scipy.interpolate import interp1d
