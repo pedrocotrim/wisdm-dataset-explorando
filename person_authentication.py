@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from dataset_contents import Person, people, sensors, activities
 from sklearn.metrics import roc_curve
 from voting_split import voting_split
+from dataclasses import dataclass
 
 
 def compute_eer_changjiang(labels, prediction):
@@ -15,8 +16,9 @@ def compute_eer_changjiang(labels, prediction):
     """
     from scipy.optimize import brentq
     from scipy.interpolate import interp1d
-    fpr, tpr, _ = roc_curve(labels, prediction, pos_label=True)
+    fpr, tpr, thresholds = roc_curve(labels, prediction, pos_label=1)
     eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
+    thresh = interp1d(fpr, thresholds)(eer)
     return eer
 
 
@@ -56,6 +58,7 @@ def biometric_train_test_split(person: Person, impostors: list[Person], activity
 def main() -> None:
     biometry_models_single = {activity: [] for activity in activities}
     biometry_models_vote = {activity: [] for activity in activities}
+    biometry_models_test = {activity: [] for activity in activities}
     for person in people:
         impostors = pick_impostors(person['id'], people)
         for activity in activities:
@@ -72,26 +75,44 @@ def main() -> None:
             biometry_classifier = RandomForestClassifier(
                 10, max_features='sqrt')
             biometry_classifier.fit(train, train_target)
+            test_classifier = RandomForestClassifier(
+                50, max_features='log2')
+            biometry_classifier.fit(train, train_target)
+            test_classifier.fit(train, train_target)
             y_true = test_target
             if len(y_true.unique()) != 2:
                 # print(person['guid'],combination,activity)
                 continue
             prediction = biometry_classifier.predict_proba(test)[:, 1]
+            test_prediction = test_classifier.predict_proba(test)[:, 1]
             eer = compute_eer_changjiang(test_target, prediction)
+            test_eer = compute_eer_changjiang(test_target, test_prediction)
             vote_pred, vote_true = voting_split(
                 test_full, biometry_classifier, 'class', biometrics=True)
             eer_vote = compute_eer_changjiang(vote_true, vote_pred)
             biometry_models_vote[activity].append(eer_vote)
             biometry_models_single[activity].append(eer)
+            biometry_models_test[activity].append(test_eer)
 
-            for activity in biometry_models_single:
-                # biometry_models_single[activity] = list(filter(lambda x: x!=0,biometry_models_single[activity]))
-                print(activities[activity], np.mean(
-                    biometry_models_single[activity])*100)
-            for activity in biometry_models_vote:
-                print(activities[activity], np.mean(
-                    biometry_models_vote[activity]))
-
+    print("unfiltered")
+    for activity in biometry_models_single:
+        print(activities[activity], np.mean(
+            biometry_models_single[activity])*100,
+            np.mean(
+            biometry_models_vote[activity])*100,
+            np.mean(
+            biometry_models_test[activity])*100)
+    print("filtered")
+    for activity in biometry_models_single:
+        biometry_models_single[activity] = list(filter(lambda x: x!=0,biometry_models_single[activity]))
+        biometry_models_test[activity] = list(filter(lambda x: x!=0,biometry_models_test[activity]))
+        biometry_models_vote[activity] = list(filter(lambda x: x!=0,biometry_models_vote[activity]))
+        print(activities[activity], np.mean(
+            biometry_models_single[activity])*100,
+            np.mean(
+            biometry_models_vote[activity])*100,
+            np.mean(
+            biometry_models_test[activity])*100)
 
 if __name__ == "__main__":
     main()
