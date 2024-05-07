@@ -48,10 +48,10 @@ activities = {'A': 'walking',
 
 people: list[Person] = [{
     'id': i,
-    'phone_accel': processed_dataframe(pd.DataFrame(arff.loadarff(f"arff_files/phone/accel/data_{i}_accel_phone.arff")[0]), columns_to_be_dropped),
-    'phone_gyro': processed_dataframe(pd.DataFrame(arff.loadarff(f"arff_files/phone/gyro/data_{i}_gyro_phone.arff")[0]), columns_to_be_dropped),
-    'watch_accel': processed_dataframe(pd.DataFrame(arff.loadarff(f"arff_files/watch/accel/data_{i}_accel_watch.arff")[0]), columns_to_be_dropped),
-    'watch_gyro': processed_dataframe(pd.DataFrame(arff.loadarff(f"arff_files/watch/gyro/data_{i}_gyro_watch.arff")[0]), columns_to_be_dropped)
+    'phone_accel': processed_dataframe(pd.DataFrame(arff.loadarff(f"wisdm-dataset/arff_files/phone/accel/data_{i}_accel_phone.arff")[0]), columns_to_be_dropped),
+    'phone_gyro': processed_dataframe(pd.DataFrame(arff.loadarff(f"wisdm-dataset/arff_files/phone/gyro/data_{i}_gyro_phone.arff")[0]), columns_to_be_dropped),
+    'watch_accel': processed_dataframe(pd.DataFrame(arff.loadarff(f"wisdm-dataset/arff_files/watch/accel/data_{i}_accel_watch.arff")[0]), columns_to_be_dropped),
+    'watch_gyro': processed_dataframe(pd.DataFrame(arff.loadarff(f"wisdm-dataset/arff_files/watch/gyro/data_{i}_gyro_watch.arff")[0]), columns_to_be_dropped)
 } for i in range(1600, 1651) if i != 1614]  # person 1614 missing in files
 
 every_sensor_combination = [[i]for i in sensors] + \
